@@ -10,5 +10,9 @@ public class PastProcedureJuryMember
 
     public string PastProcedureId { get; }
 
+    public PastProcedure? PastProcedure { get; }
+
     public string TeacherId { get; }
+
+    public Teacher? Teacher { get; }
 }
