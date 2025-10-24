@@ -7,6 +7,7 @@ public class University
         Id = id;
         Name = name;
         Faculties = [];
+        Teachers = [];
     }
 
     public string Id { get; }
@@ -14,4 +15,6 @@ public class University
     public string Name { get; }
 
     public ICollection<UniversityFaculty> Faculties { get; }
+
+    public ICollection<Teacher> Teachers { get; }
 }

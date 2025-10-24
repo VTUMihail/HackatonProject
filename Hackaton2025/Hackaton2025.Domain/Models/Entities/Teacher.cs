@@ -6,7 +6,9 @@ public class Teacher
     public Teacher(
         string id,
         TeacherTitle title,
-        FullName fullName,
+        string firstName,
+        string middleName,
+        string lastName,
         string universityId,
         University? university,
         string universityFactultyId,
@@ -17,7 +19,9 @@ public class Teacher
     {
         Id = id;
         Title = title;
-        FullName = fullName;
+        FirstName = firstName;
+        MiddleName = middleName;
+        LastName = lastName;
         UniversityId = universityId;
         University = university;
         UniversityFactultyId = universityFactultyId;
@@ -31,7 +35,11 @@ public class Teacher
 
     public TeacherTitle Title { get; private set; }
 
-    public FullName FullName { get; }
+    public string FirstName { get; }
+
+    public string MiddleName { get; }
+
+    public string LastName { get; }
 
     public string UniversityId { get; }
 
