@@ -4,12 +4,18 @@ import React, { useState } from "react";
 
 const links = [
   { to: "/", label: "Home", icon: <Home size={20} /> },
+  { to: "/generator", label: "Generate Jury", icon: <Home size={20} /> },
 
   {
     label: "Listings",
     icon: <List size={20} />,
     subLinks: [
       { to: "/professors", label: "Professors", icon: <UsersIcon size={20} /> },
+      {
+        to: "/universities",
+        label: "Universities",
+        icon: <UsersIcon size={20} />,
+      },
     ],
   },
 ];

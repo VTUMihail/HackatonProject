@@ -1,0 +1,18 @@
+import axios from "axios";
+
+axios.defaults.httpAgent = { rejectUnauthorized: false };
+
+let axiosInstance = axios.create({
+  // baseURL: "http://localhost:5003/api",
+  baseURL: "https://localhost:7165/api",
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("Network request failed:", error);
+    return Promise.reject(error);
+  }
+);
+
+export const request = axiosInstance;
