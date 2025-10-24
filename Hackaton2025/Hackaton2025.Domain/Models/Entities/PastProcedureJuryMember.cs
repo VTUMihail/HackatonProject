@@ -4,13 +4,13 @@ public class PastProcedureJuryMember
 {
     public PastProcedureJuryMember(string pastProcedureId, string teacherId)
     {
-        PastProcedureId = pastProcedureId;
+        PastProcedureJuryId = pastProcedureId;
         TeacherId = teacherId;
     }
 
-    public string PastProcedureId { get; }
+    public string PastProcedureJuryId { get; }
 
-    public PastProcedure? PastProcedure { get; }
+    public PastProcedureJury? PastProcedureJury { get; }
 
     public string TeacherId { get; }
 

@@ -17,6 +17,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<PastProcedure> PastProcedures { get; set; }
 
+    public DbSet<PastProcedureJury> PastProcedureJuries { get; set; }
+
     public DbSet<PastProcedureJuryMember> PastProcedureJuryMembers { get; set; }
 
     public DbSet<University> Universities { get; set; }

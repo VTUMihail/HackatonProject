@@ -1,4 +1,5 @@
 ﻿using Hackaton2025.Domain.Models.Abstractions;
+using Hackaton2025.Infrastructure.Abstractions;
 using Hackaton2025.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,10 +13,12 @@ public static class DependencyInjections
         services.AddDbContext<ApplicationDbContext>(options =>
                  options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddScoped<IPaginator, Paginator>();
         services.AddScoped<ITeacherService, TeacherService>();
         services.AddScoped<IUniversityService, UniversityService>();
         services.AddScoped<IUniversityFacultyService, UniversityFacultyService>();
         services.AddScoped<IPastProcedureService, PastProcedureService>();
+        services.AddScoped<IPastProcedureJuryService, PastProcedureJuryService>();
         services.AddScoped<IPastProcedureJuryMemberService, PastProcedureJuryMemberService>();
 
         return services;

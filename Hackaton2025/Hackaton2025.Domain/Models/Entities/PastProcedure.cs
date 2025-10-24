@@ -15,7 +15,7 @@ public class PastProcedure
         Id = id;
         Type = type;
         CreatedAt = createdAt;
-        JuryMembers = [];
+        Juries = [];
     }
 
     public string Id { get; }
@@ -24,5 +24,5 @@ public class PastProcedure
 
     public DateTime CreatedAt { get; }
 
-    public ICollection<PastProcedureJuryMember> JuryMembers { get; }
+    public ICollection<PastProcedureJury> Juries { get; }
 }
