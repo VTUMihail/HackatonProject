@@ -47,6 +47,12 @@ namespace Hackaton2025.Presentation.Controllers
             return Ok(teacher);
         }
 
+        [HttpGet]
+        public List<TeacherViewModel> GetAllTeachers()
+        {
+            return _teachers.ToList();
+        }
+
         
         [HttpPut("{id}")]
         public ActionResult<TeacherViewModel> UpdateTeacher(string id, [FromBody] TeacherViewModel updated)
