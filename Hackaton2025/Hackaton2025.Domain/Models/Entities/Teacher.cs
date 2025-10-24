@@ -49,6 +49,8 @@ public class Teacher
 
     public UniversityFaculty? UniversityFaculty { get; set; }
 
+    public ICollection<PastProcedureJuryMember> JuryMembers { get; set; }
+
     public decimal Distance { get; set; }
 
     public DateTime SecondLastJuryMemberDate { get; set; }
