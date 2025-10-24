@@ -24,7 +24,6 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader());
 });
 var app = builder.Build();
-builder.Services.AddInfrastructure(app.Configuration);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
