@@ -9,6 +9,12 @@ public interface IPastProcedureService
         int pageSize,
         CancellationToken cancellationToken);
 
+    public Task<ICollection<PastProcedure>> GetAllAsync(
+        PastProcedureType type,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
+
     public Task<PastProcedure?> GetByIdAsync(
         string id,
         CancellationToken cancellationToken);

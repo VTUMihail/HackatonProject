@@ -33,7 +33,8 @@ public class PastProcedureService : IPastProcedureService
         var skip = _paginator.GetSkip(page, pageSize);
         var result = await _applicationDbContext
             .PastProcedures
-            .Include(a => a.JuryMembers)
+            .Include(a => a.Juries)
+            .ThenInclude(a => a.JuryMembers)
             .ThenInclude(a => a.Teacher)
             .Skip(skip)
             .Take(pageSize)
@@ -46,7 +47,8 @@ public class PastProcedureService : IPastProcedureService
     {
         var result = await _applicationDbContext
             .PastProcedures
-            .Include(a => a.JuryMembers)
+            .Include(a => a.Juries)
+            .ThenInclude(a => a.JuryMembers)
             .ThenInclude(a => a.Teacher)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
