@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 namespace Hackaton2025.Domain.Models.Entities;
 public class PastProcedure
 {
+    private PastProcedure() { }
     public PastProcedure(
         string id, 
         PastProcedureType type,

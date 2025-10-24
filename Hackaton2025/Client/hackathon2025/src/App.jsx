@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Professors from "./pages/listing/Proffesors";
 import { JuryGenerator, JuryHistory } from "./pages/JuryGenerator";
 import Universities from "./pages/listing/Universities";
+import ProfessorDetail from "./pages/details/ProfessorDetailPage";
+import UniversityDetail from "./pages/details/UniversityDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ export default function App() {
 
             <Route path="/generator" element={<JuryGenerator />} />
             <Route path="/history" element={<JuryHistory />} />
+            <Route path="/professors/:id" element={<ProfessorDetail />} />
+            <Route path="/universities/:id" element={<UniversityDetail />} />
           </Route>
         </Routes>
       </Router>

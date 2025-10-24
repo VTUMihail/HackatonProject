@@ -2,6 +2,7 @@
 
 public class PastProcedureJury
 {
+    private PastProcedureJury() { }
     public PastProcedureJury(
         string id,
         PastProcedureType type,

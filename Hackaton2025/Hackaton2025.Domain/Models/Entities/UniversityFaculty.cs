@@ -2,6 +2,7 @@
 
 public class UniversityFaculty
 {
+    private UniversityFaculty() { }
     public UniversityFaculty(string id, string universityId, string name)
     {
         Id = id;
@@ -9,9 +10,9 @@ public class UniversityFaculty
         Name = name;
     }
 
-    public string Id { get; }
+    public string Id { get; set; }
 
-    public string UniversityId { get; }
+    public string UniversityId { get; set; }
 
-    public string Name { get; }
+    public string Name { get; set;}
 }

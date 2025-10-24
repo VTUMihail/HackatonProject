@@ -1,73 +1,88 @@
 ﻿using Hackaton2025.Domain.Models.Entities;
-using Hackaton2025.Presentation.RequestResponseModels;
+using Hackaton2025.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace Hackaton2025.Presentation.Controllers
+namespace Hackaton2025.Presentation.Controllers;
+
+[ApiController]
+[Route("api/past-procedures/{pastProcedureId}/juries")]
+public class PastProcedureJuriesController : ControllerBase
 {
-    [Route("api/past-procedures")]
-    [ApiController]
-    public class PastProceduresController : ControllerBase
+    private readonly ApplicationDbContext _db;
+    public PastProcedureJuriesController(ApplicationDbContext db) => _db = db;
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PastProcedureJury>>> GetAll(string pastProcedureId, int page = 1, int pageSize = 20, CancellationToken ct = default)
     {
-        private static readonly List<PastProcedureViewModel> _procedures = new()
-        {
-            new PastProcedureViewModel
-            {
-                Id = "1",
-                CreatedAt = DateTime.Now,
-                Type = PastProcedureType.Professor,
+        var q = _db.PastProcedureJuries.AsQueryable()
+                 .Where(j => EF.Property<string>(j, "PastProcedureId") == pastProcedureId);
+        var list = await q.Skip((page - 1) * pageSize).Take(pageSize)
+                          .Include(j => j.JuryMembers)
+                          .ToListAsync(ct);
+        return Ok(list);
+    }
 
+    [HttpGet("{id}")]
+    public async Task<ActionResult<PastProcedureJury>> GetById(string pastProcedureId, string id, CancellationToken ct)
+    {
+        var entity = await _db.PastProcedureJuries
+            .Where(j => j.Id == id && EF.Property<string>(j, "PastProcedureId") == pastProcedureId)
+            .Include(j => j.JuryMembers)
+            .FirstOrDefaultAsync(ct);
 
-            },
-            new PastProcedureViewModel
-            {
-                Id = "1",
-                CreatedAt = DateTime.Now,
-                Type = PastProcedureType.Professor,
-                JuryMembers = new List<PastProcedureJuryMember>
-                {
-                    { new PastProcedureJuryMember("1","2") },
-                    { new PastProcedureJuryMember("1","3")},
-                }
+        return entity is null ? NotFound() : Ok(entity);
+    }
 
-            }
-        };
-        [HttpGet]
-        public ActionResult<List<PastProcedureViewModel>> GetAll()
-        {
-            return Ok(_procedures);
-        }
+    public sealed record CreateJuryDto(string? Id, DateTime CreatedAt);
 
-        [HttpGet("{id}")]
-        public ActionResult<PastProcedureViewModel> GetById(string id)
-        {
-            var item = _procedures.FirstOrDefault(p => p.Id == id);
-            if (item == null) return NotFound();
-            return Ok(item);
-        }
+    [HttpPost]
+    public async Task<ActionResult<PastProcedureJury>> Create(string pastProcedureId, CreateJuryDto dto, CancellationToken ct)
+    {
+        // ensure parent exists
+        var parent = await _db.PastProcedures.FirstOrDefaultAsync(p => p.Id == pastProcedureId, ct);
+        if (parent is null) return NotFound($"PastProcedure '{pastProcedureId}' not found.");
 
+        var entity = new PastProcedureJury(
+            id: string.IsNullOrWhiteSpace(dto.Id) ? Guid.NewGuid().ToString("N") : dto.Id!,
+            type: default, // not used in your ctor now; you showed constructor with (id, type, createdAt) then later without 'type'
+            createdAt: dto.CreatedAt);
 
-        [HttpPut("{id}")]
-        public ActionResult<PastProcedureViewModel> Update(string id, [FromBody] PastProcedureViewModel input)
-        {
-            if (input == null || id != input.Id) return BadRequest("Route id and body id must match.");
+        // attach and set the shadow FK
+        _db.PastProcedureJuries.Add(entity);
+        _db.Entry(entity).Property("PastProcedureId").CurrentValue = pastProcedureId;
 
-            var existing = _procedures.FirstOrDefault(p => p.Id == id);
-            if (existing == null) return NotFound();
+        await _db.SaveChangesAsync(ct);
+        return CreatedAtAction(nameof(GetById), new { pastProcedureId, id = entity.Id }, entity);
+    }
 
-            existing.Type = input.Type;
-            existing.CreatedAt = input.CreatedAt == default ? existing.CreatedAt : input.CreatedAt;
+    public sealed record UpdateJuryDto(DateTime CreatedAt);
 
-            return Ok(existing);
-        }
+    [HttpPut("{id}")]
+    public async Task<ActionResult<PastProcedureJury>> Update(string pastProcedureId, string id, UpdateJuryDto dto, CancellationToken ct)
+    {
+        var entity = await _db.PastProcedureJuries
+            .Where(j => j.Id == id && EF.Property<string>(j, "PastProcedureId") == pastProcedureId)
+            .FirstOrDefaultAsync(ct);
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(string id)
-        {
-            var existing = _procedures.FirstOrDefault(p => p.Id == id);
-            if (existing == null) return NotFound();
+        if (entity is null) return NotFound();
 
-            _procedures.Remove(existing);
-            return NoContent();
-        }
+        _db.Entry(entity).Property("CreatedAt").CurrentValue = dto.CreatedAt;
+        await _db.SaveChangesAsync(ct);
+        return Ok(entity);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string pastProcedureId, string id, CancellationToken ct)
+    {
+        var entity = await _db.PastProcedureJuries
+            .Where(j => j.Id == id && EF.Property<string>(j, "PastProcedureId") == pastProcedureId)
+            .FirstOrDefaultAsync(ct);
+
+        if (entity is null) return NotFound();
+
+        _db.PastProcedureJuries.Remove(entity);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
     }
 }

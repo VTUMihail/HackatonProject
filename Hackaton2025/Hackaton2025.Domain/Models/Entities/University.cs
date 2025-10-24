@@ -2,6 +2,7 @@
 
 public class University
 {
+    private University() { }
     public University(string id, string name)
     {
         Id = id;

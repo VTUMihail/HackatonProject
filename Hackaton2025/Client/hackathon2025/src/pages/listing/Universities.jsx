@@ -56,20 +56,7 @@ const columns = [
       <span className="font-medium text-gray-800">{value.slice(0, 10)}...</span>
     ),
   },
-  {
-    key: "photo",
-    header: "Logo",
-    render: (value) => (
-      <img
-        src={value}
-        alt="University"
-        className="w-14 h-14 rounded-full object-cover border"
-      />
-    ),
-  },
   { key: "title", header: "University Name" },
-  { key: "address", header: "Address" },
-  { key: "phoneNumber", header: "Phone Number" },
   {
     key: "faculties",
     header: "Faculties",
@@ -90,11 +77,6 @@ const columns = [
         )}
       </div>
     ),
-  },
-  {
-    key: "establishedYear",
-    header: "Est.",
-    render: (year) => <span className="text-gray-600">{year}</span>,
   },
 ];
 

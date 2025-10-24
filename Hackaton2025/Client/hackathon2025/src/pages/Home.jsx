@@ -22,6 +22,7 @@ import {
 import RecentActivityCard from "../components/ui/cards/homePage/RecentActivityCard";
 import QuickActionCard from "../components/ui/cards/homePage/QuickActionCard";
 import { useGetTeachers } from "../hooks/teachers";
+import { path } from "framer-motion/client";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -40,12 +41,13 @@ const statCardVariants = {
 };
 
 const HomePage = () => {
+  const {data:dbTeachers} = useGetTeachers();
 
 
   const keyStats = [
     {
-      title: "Total Classifications",
-      value: 5,
+      title: "Total Teachers",
+      value: dbTeachers?.length? dbTeachers?.length : 0,
       icon: BookOpen,
       color: "text-blue-500",
       bg: "bg-blue-100",
@@ -58,7 +60,7 @@ const HomePage = () => {
       bg: "bg-green-100",
     },
     {
-      title: "Pending Assignments",
+      title: "Total Procedures",
       value: 45,
       icon: AlertCircle,
       color: "text-yellow-500",
@@ -112,9 +114,9 @@ const HomePage = () => {
   ];
 
   const quickActions = [
-    { name: "Add New Classification", icon: BookOpen },
-    { name: "Invite New Jury Member", icon: Users },
-    { name: "View Reports", icon: BarChart2 },
+    { name: "Add New Teacher", icon: BookOpen,path:"/teachers/addNewTeacher" },
+    { name: "Generate New Jury", icon: Users, path:"/generator" },
+    { name: "View Reports", icon: BarChart2, path:"/history" },
     { name: "Schedule Meeting", icon: Calendar },
   ];
   const {data:teachers} = useGetTeachers();
@@ -170,7 +172,7 @@ const HomePage = () => {
           </motion.section>
 
           {/* Recent Activity */}
-          <motion.section
+          {/* <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
@@ -186,11 +188,11 @@ const HomePage = () => {
                 ))}
               </ul>
             </div>
-          </motion.section>
+          </motion.section> */}
 
           {/* Footer */}
           <footer className="mt-8 text-center text-gray-500 text-sm">
-            © 2025 UniJury Dashboard. All rights reserved. | Version 2.1.0
+            © 2025 UniJury Dashboard. All rights reserved.
           </footer>
         </main>
     </div>

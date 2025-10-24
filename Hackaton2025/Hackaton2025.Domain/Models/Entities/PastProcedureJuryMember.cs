@@ -2,6 +2,7 @@
 
 public class PastProcedureJuryMember
 {
+    private PastProcedureJuryMember() { }
     public PastProcedureJuryMember(string pastProcedureId, string teacherId)
     {
         PastProcedureJuryId = pastProcedureId;

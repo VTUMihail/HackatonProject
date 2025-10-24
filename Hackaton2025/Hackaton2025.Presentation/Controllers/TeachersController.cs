@@ -1,136 +1,109 @@
-﻿using Hackaton2025.Domain.Models.Abstractions;
-using Hackaton2025.Domain.Models.Entities;
+﻿using Hackaton2025.Domain.Models.Entities;
 using Hackaton2025.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace Hackaton2025.Presentation.Controllers
+namespace Hackaton2025.Presentation.Controllers;
+
+[ApiController]
+[Route("api/teachers")]
+public class TeachersController : ControllerBase
 {
-    [Route("api/teachers")]
-    [ApiController]
-    public class TeachersController : ControllerBase
+    private readonly ApplicationDbContext _db;
+    public TeachersController(ApplicationDbContext db) => _db = db;
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Teacher>>> GetAll(int page = 1, int pageSize = 20, CancellationToken ct = default)
     {
+        var list = await _db.Teachers
+            .OrderBy(t => t.LastName).ThenBy(t => t.FirstName)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .ToListAsync(ct);
+        return Ok(list);
+    }
 
-        private readonly ITeacherService _teacherService;
-        private readonly ApplicationDbContext _dbContext;
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Teacher>> GetById(string id, CancellationToken ct)
+    {
+        var entity = await _db.Teachers.FirstOrDefaultAsync(x => x.Id == id, ct);
+        return entity is null ? NotFound() : Ok(entity);
+    }
 
-        public TeachersController(ITeacherService teacherService, ApplicationDbContext dbContext)
-        {
-            _teacherService = teacherService;
-            _dbContext = dbContext;
-        }
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TeacherViewModel>>> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            CancellationToken cancellationToken = default)
-        {
-            var teachers = await _teacherService.GetAllAsync(page, pageSize, cancellationToken);
+    public sealed record CreateTeacherDto(
+        string? Id,
+        TeacherTitle Title,
+        string FirstName,
+        string? MiddleName,
+        string LastName,
+        string UniversityId,
+        string UniversityFactultyId,
+        decimal Distance,
+        DateTime SecondLastJuryMemberDate,
+        DateTime LastJuryMemberDate);
 
-            var result = teachers.Select(MapToViewModel).ToList();
-            return Ok(result);
-        }
+    [HttpPost]
+    public async Task<ActionResult<Teacher>> Create([FromBody] CreateTeacherDto dto, CancellationToken ct)
+    {
+        var entity = new Teacher(
+            id: string.IsNullOrWhiteSpace(dto.Id) ? Guid.NewGuid().ToString("N") : dto.Id!,
+            title: dto.Title,
+            firstName: dto.FirstName,
+            middleName: dto.MiddleName ?? string.Empty,
+            lastName: dto.LastName,
+            universityId: dto.UniversityId,
+            university: null,
+            universityFactultyId: dto.UniversityFactultyId,
+            universityFaculty: null,
+            distance: dto.Distance,
+            secondLastJuryMemberDate: dto.SecondLastJuryMemberDate,
+            lastJuryMemberDate: dto.LastJuryMemberDate);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TeacherViewModel>> GetById(string id, CancellationToken cancellationToken)
-        {
-            var teacher = await _teacherService.GetByIdAsync(id, cancellationToken);
-            if (teacher == null)
-                return NotFound();
+        _db.Teachers.Add(entity);
+        await _db.SaveChangesAsync(ct);
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+    }
 
-            return Ok(MapToViewModel(teacher));
-        }
+    public sealed record UpdateTeacherDto(
+        string Id,
+        TeacherTitle Title,
+        string FirstName,
+        string? MiddleName,
+        string LastName,
+        string UniversityId,
+        string UniversityFactultyId,
+        decimal Distance,
+        DateTime? LastJuryMemberDate);
 
-        [HttpPost]
-        public async Task<ActionResult<TeacherViewModel>> Create(
-            [FromBody] TeacherViewModel model,
-            CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-                return ValidationProblem(ModelState);
+    [HttpPut("{id}")]
+    public async Task<ActionResult<Teacher>> Update(string id, [FromBody] UpdateTeacherDto dto, CancellationToken ct)
+    {
+        if (id != dto.Id) return BadRequest("Id mismatch");
 
-            var entity = new Teacher(
-                id: string.IsNullOrWhiteSpace(model.Id) ? Guid.NewGuid().ToString("N") : model.Id,
-                title: model.Title,
-                firstName: model.FirstName,
-                middleName: model.MiddleName,
-                lastName: model.LastName,
-                universityId: model.UniversityId,
-                university: null, 
-                universityFactultyId: model.UniversityFactultyId,
-                universityFaculty: null,
-                distance: model.Distance,
-                secondLastJuryMemberDate: model.SecondLastJuryMemberDate ?? DateTime.MinValue,
-                lastJuryMemberDate: model.LastJuryMemberDate ?? DateTime.MinValue
-            );
+        var entity = await _db.Teachers.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (entity is null) return NotFound();
 
-            _teacherService.Add(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+        entity.Title = dto.Title;
+        entity.FirstName = dto.FirstName;
+        entity.MiddleName = dto.MiddleName ?? string.Empty;
+        entity.LastName = dto.LastName;
+        entity.UniversityId = dto.UniversityId;
+        entity.UniversityFactultyId = dto.UniversityFactultyId;
+        entity.Distance = dto.Distance;
 
-            return CreatedAtAction(nameof(GetById), new { id = entity.Id }, MapToViewModel(entity));
-        }
+        if (dto.LastJuryMemberDate.HasValue)
+            entity.AddLastJuryMemberDate(dto.LastJuryMemberDate.Value);
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<TeacherViewModel>> Update(
-            string id,
-            [FromBody] TeacherViewModel model,
-            CancellationToken cancellationToken)
-        {
-            if (id != model.Id)
-                return BadRequest("ID must match.");
+        await _db.SaveChangesAsync(ct);
+        return Ok(entity);
+    }
 
-            var existing = await _teacherService.GetByIdAsync(id, cancellationToken);
-            if (existing == null)
-                return NotFound();
-
-            existing.Title = model.Title;
-            existing.FirstName = model.FirstName;
-            existing.MiddleName = model.MiddleName;
-            existing.LastName = model.LastName;
-            existing.UniversityId = model.UniversityId;
-            existing.UniversityFactultyId = model.UniversityFactultyId;
-            existing.Distance = model.Distance;
-
-            if (model.LastJuryMemberDate.HasValue)
-            {
-                existing.AddLastJuryMemberDate(model.LastJuryMemberDate.Value);
-            }
-                
-            _teacherService.Update(existing);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            return Ok(MapToViewModel(existing));
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
-        {
-            var existing = await _teacherService.GetByIdAsync(id, cancellationToken);
-            if (existing == null)
-                return NotFound();
-
-            _teacherService.Delete(existing);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            return NoContent();
-        }
-
-        private static TeacherViewModel MapToViewModel(Teacher entity)
-        {
-            return new TeacherViewModel
-            {
-                Id = entity.Id,
-                Title = entity.Title,
-                FirstName = entity.FirstName,
-                MiddleName = entity.MiddleName,
-                LastName = entity.LastName,
-                UniversityFactultyId = entity.UniversityFactultyId,
-                Distance = entity.Distance,
-                SecondLastJuryMemberDate = entity.SecondLastJuryMemberDate,
-                LastJuryMemberDate = entity.LastJuryMemberDate
-            };
-        }
-
-
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id, CancellationToken ct)
+    {
+        var entity = await _db.Teachers.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (entity is null) return NotFound();
+        _db.Teachers.Remove(entity);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
     }
 }
