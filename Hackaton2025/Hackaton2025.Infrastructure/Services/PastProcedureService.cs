@@ -18,8 +18,96 @@ public class PastProcedureService : IPastProcedureService
         _applicationDbContext = applicationDbContext;
     }
 
+    private PastProcedureJury CreateJury(
+     PastProcedureType type,
+     int minProf,
+     int minForeign,
+     int amount)
+    {
+        var forbiddenTeacherIds = _applicationDbContext
+            .PastProcedures
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => a.Juries.SelectMany(a => a.JuryMembers.Select(a => a.TeacherId)))
+            .First()
+            .GroupBy(id => id)
+            .Where(g => g.Count() == 2)
+            .Select(g => g.Key)
+            .ToList();
+
+        var professors = _applicationDbContext
+            .Teachers
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id))
+            .OrderBy(t => t.Distance)
+            .Where(t => t.Title == TeacherTitle.Professor)
+            .Take(minProf)
+            .ToList();
+
+        forbiddenTeacherIds.AddRange(professors.Select(a => a.Id));
+        var foreigns = _applicationDbContext
+            .Teachers
+            .OrderBy(t => t.Distance)
+            .Include(t => t.University)
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id) && t.University!.Name != "VTU")
+            .Take(minForeign)
+            .ToList();
+
+        forbiddenTeacherIds.AddRange(foreigns.Select(a => a.Id));
+
+        var remainingCount = amount - (professors.Count + foreigns.Count);
+        var remaining = _applicationDbContext
+            .Teachers
+            .OrderBy(t => t.Distance)
+            .Include(t => t.University)
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id))
+            .Take(remainingCount)
+            .ToList();
+
+        var selectedMembers = professors
+            .Union(foreigns)
+            .Union(remaining)
+            .ToList();
+
+        var jury = new PastProcedureJury(Guid.NewGuid().ToString(), type, DateTime.Now);
+
+        foreach (var member in selectedMembers)
+        {
+            jury.JuryMembers.Add(new PastProcedureJuryMember(jury.Id, member.Id));
+            member.AddLastJuryMemberDate(DateTime.Now);
+        }
+
+        _applicationDbContext.SaveChanges();
+
+        return jury;
+    }
+
     public void Add(PastProcedure entity)
     {
+        PastProcedureJury jury;
+
+        switch (entity.Type)
+        {
+            case PastProcedureType.Doctor:
+                jury = CreateJury(entity.Type, 1, 3, 5);
+                break;
+
+            case PastProcedureType.DoctorOfScience:
+                jury = CreateJury(entity.Type, 3, 4, 7);
+                break;
+
+            case PastProcedureType.AssociateProfessor:
+                jury = CreateJury(entity.Type, 3, 3, 7);
+                break;
+
+            case PastProcedureType.Professor:
+                jury = CreateJury(entity.Type, 4, 3, 7);
+                break;
+
+            default:
+                throw new InvalidOperationException("Непознат тип процедура");
+        }
+
+        entity.Juries.Add(jury);
+
         _applicationDbContext.PastProcedures.Add(entity);
     }
 
@@ -100,4 +188,5 @@ public class PastProcedureService : IPastProcedureService
 
         return null;
     }
+
 }
