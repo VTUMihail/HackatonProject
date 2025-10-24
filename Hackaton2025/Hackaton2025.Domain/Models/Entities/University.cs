@@ -2,7 +2,7 @@
 
 public class University
 {
-    private University() { }
+    public University() { }
     public University(string id, string name)
     {
         Id = id;
@@ -11,9 +11,9 @@ public class University
         Teachers = [];
     }
 
-    public string Id { get; }
+    public string Id { get; set; }
 
-    public string Name { get; }
+    public string Name { get; set; }
 
     public ICollection<UniversityFaculty> Faculties { get; }
 

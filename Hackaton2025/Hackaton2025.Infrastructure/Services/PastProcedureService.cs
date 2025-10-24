@@ -96,7 +96,8 @@ public class PastProcedureService : IPastProcedureService
         var forbiddenTeacherIds = _applicationDbContext
             .PastProcedures
             .OrderByDescending(a => a.CreatedAt)
-            .SelectMany(a => a.Juries.SelectMany(a => a.JuryMembers.Select(a => a.TeacherId)))
+            .Select(a => a.Juries.SelectMany(a => a.JuryMembers.Select(a => a.TeacherId)))
+            .First()
             .GroupBy(id => id)
             .Where(g => g.Count() == 2)
             .Select(g => g.Key)
@@ -115,7 +116,7 @@ public class PastProcedureService : IPastProcedureService
             .Teachers
             .OrderBy(t => t.Distance)
             .Include(t => t.University)
-            .Where(t => t.University!.Name != "ВТУ")
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id) && t.University!.Name != "ВТУ")
             .Take(minForeign)
             .ToList();
 
