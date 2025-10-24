@@ -2,6 +2,7 @@
 using Hackaton2025.Domain.Models.Entities;
 using Hackaton2025.Infrastructure.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace Hackaton2025.Infrastructure.Services;
 
@@ -20,6 +21,32 @@ public class PastProcedureService : IPastProcedureService
 
     public void Add(PastProcedure entity)
     {
+        PastProcedureJury jury;
+
+        switch (entity.Type)
+        {
+            case PastProcedureType.Doctor:
+                jury = CreateJury(entity.Type, 1, 3, 5);
+                break;
+
+            case PastProcedureType.DoctorOfScience:
+                jury = CreateJury(entity.Type, 3, 4, 7);
+                break;
+
+            case PastProcedureType.AssociateProfessor:
+                jury = CreateJury(entity.Type, 3, 3, 7);
+                break;
+
+            case PastProcedureType.Professor:
+                jury = CreateJury(entity.Type, 4, 3, 7);
+                break;
+
+            default:
+                throw new InvalidOperationException("Непознат тип процедура");
+        }
+
+        entity.Juries.Add(jury);
+
         _applicationDbContext.PastProcedures.Add(entity);
     }
 
@@ -30,32 +57,6 @@ public class PastProcedureService : IPastProcedureService
 
     public async Task<ICollection<PastProcedure>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        var skip = _paginator.GetSkip(page, pageSize);
-        var result = await _applicationDbContext
-            .PastProcedures
-            .Include(a => a.Juries)
-            .ThenInclude(a => a.JuryMembers)
-            .ThenInclude(a => a.Teacher)
-            .Skip(skip)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        return result;
-    }
-
-    public async Task<ICollection<PastProcedure>> GetAllAsync(
-        PastProcedureType type,
-        int page, 
-        int pageSize, 
-        CancellationToken cancellationToken)
-    {
-        //switch (type)
-        //{
-        //    case PastProcedureType.Doctor:
-        //        AddDoctorateJuryAsync(cancellationToken);
-
-        //}
-
         var skip = _paginator.GetSkip(page, pageSize);
         var result = await _applicationDbContext
             .PastProcedures
@@ -86,18 +87,64 @@ public class PastProcedureService : IPastProcedureService
         _applicationDbContext.PastProcedures.Update(entity);
     }
 
-    private async Task<PastProcedureJury> AddDoctorateJuryAsync(CancellationToken cancellationToken)
+    private PastProcedureJury CreateJury(
+         PastProcedureType type,
+         int minProf,
+         int minForeign,
+         int amount)
     {
-        var professor = await _applicationDbContext
+        var forbiddenTeacherIds = _applicationDbContext
+            .PastProcedures
+            .OrderByDescending(a => a.CreatedAt)
+            .SelectMany(a => a.Juries.SelectMany(a => a.JuryMembers.Select(a => a.TeacherId)))
+            .GroupBy(id => id)
+            .Where(g => g.Count() == 2)
+            .Select(g => g.Key)
+            .ToList();
+
+        var professors = _applicationDbContext
             .Teachers
-            .OrderBy(a => a.Distance)
-            .FirstOrDefaultAsync(a => a.Title == TeacherTitle.Professor, cancellationToken);
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id))
+            .OrderBy(t => t.Distance)
+            .Where(t => t.Title == TeacherTitle.Professor)
+            .Take(minProf)
+            .ToList();
 
-        //var foreigns = await _applicationDbContext
-        //    .Teachers
-        //    .OrderBy(a => a.Distance)
-        //    .Where(a => a.Title == TeacherTitle.Professor);
+        forbiddenTeacherIds.AddRange(professors.Select(a => a.Id));
+        var foreigns = _applicationDbContext
+            .Teachers
+            .OrderBy(t => t.Distance)
+            .Include(t => t.University)
+            .Where(t => t.University!.Name != "ВТУ")
+            .Take(minForeign)
+            .ToList();
 
-        return null;
+        forbiddenTeacherIds.AddRange(foreigns.Select(a => a.Id));
+
+        var remainingCount = amount - (professors.Count + foreigns.Count);
+        var remaining = _applicationDbContext
+            .Teachers
+            .OrderBy(t => t.Distance)
+            .Include(t => t.University)
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id))
+            .Take(remainingCount)
+            .ToList();
+
+        var selectedMembers = professors
+            .Union(foreigns)
+            .Union(remaining)
+            .ToList();
+
+        var jury = new PastProcedureJury(Guid.NewGuid().ToString(), type, DateTime.Now);
+
+        foreach (var member in selectedMembers)
+        {
+            jury.JuryMembers.Add(new PastProcedureJuryMember(jury.Id, member.Id));
+            member.AddLastJuryMemberDate(DateTime.Now);
+        }
+
+        _applicationDbContext.SaveChanges();
+
+        return jury;
     }
 }

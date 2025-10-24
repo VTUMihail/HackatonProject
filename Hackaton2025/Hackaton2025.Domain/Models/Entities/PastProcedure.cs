@@ -24,5 +24,5 @@ public class PastProcedure
 
     public DateTime CreatedAt { get; }
 
-    public ICollection<PastProcedureJury> Juries { get; }
+    public ICollection<PastProcedureJury> Juries { get; } = [];
 }
