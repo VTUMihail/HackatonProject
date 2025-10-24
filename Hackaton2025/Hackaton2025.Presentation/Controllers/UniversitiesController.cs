@@ -1,7 +1,4 @@
-﻿using Hackaton2025.Domain.Models.Entities;
-using Hackaton2025.Domain.Models.ValueObjects;
-using Hackaton2025.Presentation.RequestResponseModels;
-using Microsoft.AspNetCore.Http;
+﻿using Hackaton2025.Presentation.RequestResponseModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hackaton2025.Presentation.Controllers
@@ -56,7 +53,7 @@ namespace Hackaton2025.Presentation.Controllers
             if (teacher == null)
                 return NotFound();
 
-           
+
 
             return Ok(teacher);
         }

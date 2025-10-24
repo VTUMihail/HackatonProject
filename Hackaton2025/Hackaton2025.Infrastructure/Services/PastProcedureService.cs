@@ -49,17 +49,12 @@ public class PastProcedureService : IPastProcedureService
         int pageSize, 
         CancellationToken cancellationToken)
     {
-        switch (type)
-        {
-            case PastProcedureType.Doctor:
-                AddDoctorateJuryAsync();
-            case PastProcedureType.DoctorOfScience:
+        //switch (type)
+        //{
+        //    case PastProcedureType.Doctor:
+        //        AddDoctorateJuryAsync(cancellationToken);
 
-            case PastProcedureType.AssociateProfessor:
-
-            case PastProcedureType.Professor:
-
-        }
+        //}
 
         var skip = _paginator.GetSkip(page, pageSize);
         var result = await _applicationDbContext
@@ -91,16 +86,18 @@ public class PastProcedureService : IPastProcedureService
         _applicationDbContext.PastProcedures.Update(entity);
     }
 
-    private Task<PastProcedureJury> AddDoctorateJuryAsync(CancellationToken cancellationToken)
+    private async Task<PastProcedureJury> AddDoctorateJuryAsync(CancellationToken cancellationToken)
     {
-        var professor = _applicationDbContext
+        var professor = await _applicationDbContext
             .Teachers
             .OrderBy(a => a.Distance)
             .FirstOrDefaultAsync(a => a.Title == TeacherTitle.Professor, cancellationToken);
 
-        var professor = _applicationDbContext
-            .Teachers
-            .OrderBy(a => a.Distance)
-            .FirstOrDefaultAsync(a => a.Title == TeacherTitle.Professor, cancellationToken);
+        //var foreigns = await _applicationDbContext
+        //    .Teachers
+        //    .OrderBy(a => a.Distance)
+        //    .Where(a => a.Title == TeacherTitle.Professor);
+
+        return null;
     }
 }

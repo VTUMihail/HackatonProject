@@ -1,6 +1,4 @@
-﻿using Hackaton2025.Domain.Models.ValueObjects;
-
-namespace Hackaton2025.Domain.Models.Entities;
+﻿namespace Hackaton2025.Domain.Models.Entities;
 public class Teacher
 {
     public Teacher(
@@ -33,7 +31,7 @@ public class Teacher
 
     public string Id { get; set; }
 
-    public TeacherTitle Title { get;  set; }
+    public TeacherTitle Title { get; set; }
 
     public string FirstName { get; set; }
 
