@@ -1,4 +1,8 @@
+using Hackaton2025.Infrastructure;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +24,7 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader());
 });
 var app = builder.Build();
-
+builder.Services.AddInfrastructure(app.Configuration);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

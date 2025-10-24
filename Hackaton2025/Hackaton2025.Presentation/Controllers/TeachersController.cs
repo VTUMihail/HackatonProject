@@ -1,5 +1,7 @@
-﻿using Hackaton2025.Domain.Models.Entities;
+﻿using Hackaton2025.Domain.Models.Abstractions;
+using Hackaton2025.Domain.Models.Entities;
 using Hackaton2025.Domain.Models.ValueObjects;
+using Hackaton2025.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,75 +12,119 @@ namespace Hackaton2025.Presentation.Controllers
     public class TeachersController : ControllerBase
     {
 
-        private static readonly List<TeacherViewModel> _teachers = new()
-        {
-            new TeacherViewModel
-            {
-                Id = "1",
-                Title = TeacherTitle.Professor,
-                FullName = new FullName("Alice","Alice","Alice"),
-                UniversityId = "U001",
-                UniversityFactultyId = "F001"
-            },
-            new TeacherViewModel
-            {
-                Id = "2",
-                Title = TeacherTitle.AssociateProfessor,
-                FullName = new FullName("BOB","bob","bob"),
-                UniversityId = "U001",
-                UniversityFactultyId = "F002"
-            },
-            new TeacherViewModel
-            {
-                Id = "3",
-                Title = TeacherTitle.AssociateProfessor,
-                FullName = new FullName("Alice","alice","alice"),
-                UniversityId = "U002",
-                UniversityFactultyId = "F003"
-            }
-        };
-        [HttpGet("{id}")]
-        public ActionResult<TeacherViewModel> GetTeacherById(string id)
-        {
-            var teacher = _teachers.Find(t => t.Id == id);
-            if (teacher == null)
-                return NotFound();
+        private readonly ITeacherService _teacherService;
+        private readonly ApplicationDbContext _dbContext;
 
-            return Ok(teacher);
+        public TeachersController(ITeacherService teacherService, ApplicationDbContext dbContext)
+        {
+            _teacherService = teacherService;
+            _dbContext = dbContext;
         }
-
         [HttpGet]
-        public List<TeacherViewModel> GetAllTeachers()
+        public async Task<ActionResult<IEnumerable<TeacherViewModel>>> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
         {
-            return _teachers.ToList();
+            var teachers = await _teacherService.GetAllAsync(page, pageSize, cancellationToken);
+
+            var result = teachers.Select(MapToViewModel).ToList();
+            return Ok(result);
         }
 
-        
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TeacherViewModel>> GetById(string id, CancellationToken cancellationToken)
+        {
+            var teacher = await _teacherService.GetByIdAsync(id, cancellationToken);
+            if (teacher == null)
+                return NotFound();
+
+            return Ok(MapToViewModel(teacher));
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<TeacherViewModel>> Create(
+            [FromBody] TeacherViewModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            var entity = new Teacher(
+                id: string.IsNullOrWhiteSpace(model.Id) ? Guid.NewGuid().ToString("N") : model.Id,
+                title: model.Title,
+                fullName: model.FullName,
+                universityId: model.UniversityId,
+                university: null, 
+                universityFactultyId: model.UniversityFactultyId,
+                universityFaculty: null,
+                distance: model.Distance,
+                secondLastJuryMemberDate: model.SecondLastJuryMemberDate ?? DateTime.MinValue,
+                lastJuryMemberDate: model.LastJuryMemberDate ?? DateTime.MinValue
+            );
+
+            _teacherService.Add(entity);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return CreatedAtAction(nameof(GetById), new { id = entity.Id }, MapToViewModel(entity));
+        }
+
         [HttpPut("{id}")]
-        public ActionResult<TeacherViewModel> UpdateTeacher(string id, [FromBody] TeacherViewModel updated)
+        public async Task<ActionResult<TeacherViewModel>> Update(
+            string id,
+            [FromBody] TeacherViewModel model,
+            CancellationToken cancellationToken)
         {
-            var teacher = _teachers.Find(t => t.Id == id);
-            if (teacher == null)
+            if (id != model.Id)
+                return BadRequest("ID must match.");
+
+            var existing = await _teacherService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
                 return NotFound();
 
-            teacher.Title = updated.Title;
-            teacher.FullName = updated.FullName;
-            teacher.UniversityId = updated.UniversityId;
-            teacher.UniversityFactultyId = updated.UniversityFactultyId;
+            existing.Title = model.Title;
+            existing.FullName = model.FullName;
+            existing.UniversityId = model.UniversityId;
+            existing.UniversityFactultyId = model.UniversityFactultyId;
+            existing.Distance = model.Distance;
 
-            return Ok(teacher);
+            if (model.LastJuryMemberDate.HasValue)
+            {
+                existing.AddLastJuryMemberDate(model.LastJuryMemberDate.Value);
+            }
+                
+            _teacherService.Update(existing);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return Ok(MapToViewModel(existing));
         }
 
-        
         [HttpDelete("{id}")]
-        public IActionResult DeleteTeacher(string id)
+        public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
         {
-            var teacher = _teachers.Find(t => t.Id == id);
-            if (teacher == null)
+            var existing = await _teacherService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
                 return NotFound();
 
-            _teachers.Remove(teacher);
+            _teacherService.Delete(existing);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             return NoContent();
+        }
+
+        private static TeacherViewModel MapToViewModel(Teacher entity)
+        {
+            return new TeacherViewModel
+            {
+                Id = entity.Id,
+                Title = entity.Title,
+                FullName = entity.FullName,
+                UniversityId = entity.UniversityId,
+                UniversityFactultyId = entity.UniversityFactultyId,
+                Distance = entity.Distance,
+                SecondLastJuryMemberDate = entity.SecondLastJuryMemberDate,
+                LastJuryMemberDate = entity.LastJuryMemberDate
+            };
         }
 
 

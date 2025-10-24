@@ -12,4 +12,10 @@ public class TeacherViewModel
     public string UniversityId { get; set; }
 
     public string UniversityFactultyId { get; set; }
+
+    public decimal Distance { get; set; }
+
+    public DateTime? SecondLastJuryMemberDate { get; set; }
+
+    public DateTime? LastJuryMemberDate { get; set; }
 }
