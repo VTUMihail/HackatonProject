@@ -31,29 +31,29 @@ public class Teacher
         LastJuryMemberDate = lastJuryMemberDate;
     }
 
-    public string Id { get; }
+    public string Id { get; set; }
 
-    public TeacherTitle Title { get; private set; }
+    public TeacherTitle Title { get;  set; }
 
-    public string FirstName { get; }
+    public string FirstName { get; set; }
 
-    public string MiddleName { get; }
+    public string MiddleName { get; set; }
 
-    public string LastName { get; }
+    public string LastName { get; set; }
 
-    public string UniversityId { get; }
+    public string UniversityId { get; set; }
 
-    public University? University { get; }
+    public University? University { get; set; }
 
-    public string UniversityFactultyId { get; }
+    public string UniversityFactultyId { get; set; }
 
-    public UniversityFaculty? UniversityFaculty { get; }
+    public UniversityFaculty? UniversityFaculty { get; set; }
 
-    public decimal Distance { get; }
+    public decimal Distance { get; set; }
 
-    public DateTime SecondLastJuryMemberDate { get; private set; }
+    public DateTime SecondLastJuryMemberDate { get; set; }
 
-    public DateTime LastJuryMemberDate { get; private set; }
+    public DateTime LastJuryMemberDate { get; set; }
 
     public void AddLastJuryMemberDate(DateTime lastJuryMemberDate)
     {

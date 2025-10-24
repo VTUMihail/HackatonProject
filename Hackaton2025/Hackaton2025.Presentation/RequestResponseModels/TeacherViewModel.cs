@@ -1,5 +1,4 @@
 using Hackaton2025.Domain.Models.Entities;
-using Hackaton2025.Domain.Models.ValueObjects;
 
 public class TeacherViewModel
 {
@@ -7,8 +6,9 @@ public class TeacherViewModel
 
     public TeacherTitle Title { get; set; }
 
-    public FullName FullName { get; set; }
-
+    public string FirstName { get; set; }
+    public string MiddleName { get; set; }
+    public string LastName { get; set; }
     public string UniversityId { get; set; }
 
     public string UniversityFactultyId { get; set; }

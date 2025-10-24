@@ -1,6 +1,5 @@
 ﻿using Hackaton2025.Domain.Models.Abstractions;
 using Hackaton2025.Domain.Models.Entities;
-using Hackaton2025.Domain.Models.ValueObjects;
 using Hackaton2025.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +52,9 @@ namespace Hackaton2025.Presentation.Controllers
             var entity = new Teacher(
                 id: string.IsNullOrWhiteSpace(model.Id) ? Guid.NewGuid().ToString("N") : model.Id,
                 title: model.Title,
-                fullName: model.FullName,
+                firstName: model.FirstName,
+                middleName: model.MiddleName,
+                lastName: model.LastName,
                 universityId: model.UniversityId,
                 university: null, 
                 universityFactultyId: model.UniversityFactultyId,
@@ -83,7 +84,9 @@ namespace Hackaton2025.Presentation.Controllers
                 return NotFound();
 
             existing.Title = model.Title;
-            existing.FullName = model.FullName;
+            existing.FirstName = model.FirstName;
+            existing.MiddleName = model.MiddleName;
+            existing.LastName = model.LastName;
             existing.UniversityId = model.UniversityId;
             existing.UniversityFactultyId = model.UniversityFactultyId;
             existing.Distance = model.Distance;
@@ -118,8 +121,9 @@ namespace Hackaton2025.Presentation.Controllers
             {
                 Id = entity.Id,
                 Title = entity.Title,
-                FullName = entity.FullName,
-                UniversityId = entity.UniversityId,
+                FirstName = entity.FirstName,
+                MiddleName = entity.MiddleName,
+                LastName = entity.LastName,
                 UniversityFactultyId = entity.UniversityFactultyId,
                 Distance = entity.Distance,
                 SecondLastJuryMemberDate = entity.SecondLastJuryMemberDate,
