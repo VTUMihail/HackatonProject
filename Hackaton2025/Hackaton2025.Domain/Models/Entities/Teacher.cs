@@ -1,6 +1,7 @@
 ﻿namespace Hackaton2025.Domain.Models.Entities;
 public class Teacher
 {
+    private Teacher() { }
     public Teacher(
         string id,
         TeacherTitle title,

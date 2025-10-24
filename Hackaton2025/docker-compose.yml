@@ -10,6 +10,8 @@ services:
       - sqlserver
     environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=Hackaton2025Db;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
     ports:
       - "8080:8080" 
       
