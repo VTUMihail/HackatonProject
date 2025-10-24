@@ -1,0 +1,6 @@
+@Hackaton2025.Presentation_HostAddress = http://localhost:5014
+
+GET {{Hackaton2025.Presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

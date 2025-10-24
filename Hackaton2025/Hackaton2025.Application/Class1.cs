@@ -1,0 +1,6 @@
+﻿namespace Hackaton2025.Application;
+
+public class Class1
+{
+
+}

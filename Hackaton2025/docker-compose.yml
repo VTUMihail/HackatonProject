@@ -1,0 +1,6 @@
+services:
+  hackaton2025.presentation:
+    image: ${DOCKER_REGISTRY-}hackaton2025presentation
+    build:
+      context: .
+      dockerfile: Hackaton2025.Presentation/Dockerfile
