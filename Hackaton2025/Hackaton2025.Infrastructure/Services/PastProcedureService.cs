@@ -116,7 +116,7 @@ public class PastProcedureService : IPastProcedureService
             .Teachers
             .OrderBy(t => t.Distance)
             .Include(t => t.University)
-            .Where(t => !forbiddenTeacherIds.Contains(t.Id) && t.University!.Name != "ВТУ")
+            .Where(t => !forbiddenTeacherIds.Contains(t.Id) && t.University!.Name != "Великотърновски университет „Св. св. Кирил и Методий")
             .Take(minForeign)
             .ToList();
 
